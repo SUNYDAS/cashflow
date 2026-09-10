@@ -141,11 +141,10 @@ Catches most deploy failures before you push:
 
 ```bash
 npm run build:all
-
-# PowerShell
-$env:NODE_ENV="production"; $env:MONGODB_URI="<your atlas string>"; npm start
+npm start
 ```
 
+This reads `server/.env`, so it uses the same Atlas database Render will.
 Open <http://localhost:4000>. If it works here, it will work on Render.
 
 ---

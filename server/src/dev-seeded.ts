@@ -1,4 +1,5 @@
 /** In-memory MongoDB + demo data + API, for running the app with no database. */
+import './lib/env.js';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { createApp } from './app.js';
 import { connectDb } from './db.js';

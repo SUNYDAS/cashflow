@@ -1,5 +1,5 @@
 /** CLI: reset the configured database to the demo dataset. */
-import 'dotenv/config';
+import './lib/env.js';
 import { connectDb, disconnectDb } from './db.js';
 import { seedDemoData } from './seed-data.js';
 
