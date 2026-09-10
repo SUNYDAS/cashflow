@@ -81,7 +81,7 @@ password never enters the repo.
    | Field | Value |
    |---|---|
    | Language | `Node` |
-   | Build Command | `npm install && npm run build:all` |
+   | Build Command | `npm install --include=dev && npm run build:all` |
    | Start Command | `npm start` |
    | Instance Type | `Free` |
 
@@ -98,6 +98,12 @@ password never enters the repo.
    without this flag every deploy pays for that download.
 
    Don't set `PORT` — Render injects it, and the server reads it.
+
+   **Why the build command needs `--include=dev`:** `NODE_ENV=production` makes
+   npm skip devDependencies, and every build tool — vite, typescript, `@types/*` —
+   is a devDependency. Without the flag the build installs almost nothing and
+   fails with `Cannot find type definition file for 'vite/client'`. The runtime
+   still only needs the production dependencies.
 
 5. **Create Web Service**. First build takes ~3–5 minutes.
 
@@ -175,5 +181,5 @@ at build time, not served from source.
 | **Vercel / Netlify** | Frontend only. Express would have to be rewritten as serverless functions, and the single-origin trick stops working — you'd deploy the API elsewhere and set `CORS_ORIGIN`. Not worth it here. |
 | **VPS** (Hetzner, DigitalOcean) | `npm run build:all`, run under `pm2` or systemd, nginx in front. Most control, most upkeep. |
 
-All of them use the same two commands: build `npm install && npm run build:all`,
-start `npm start`.
+All of them use the same two commands: build `npm install --include=dev && npm run
+build:all`, start `npm start`.
