@@ -1,0 +1,52 @@
+@host = http://localhost:4000
+# Paste ids from the responses below.
+@group = REPLACE_ME
+@ana = REPLACE_ME
+@ben = REPLACE_ME
+
+### Health
+GET {{host}}/health
+
+### Create a group with members
+POST {{host}}/api/groups
+Content-Type: application/json
+
+{ "name": "Lisbon Trip", "currency": "EUR", "members": ["Ana", "Ben", "Chi", "Dev"] }
+
+### List groups
+GET {{host}}/api/groups
+
+### Add a member
+POST {{host}}/api/groups/{{group}}/members
+Content-Type: application/json
+
+{ "name": "Eve" }
+
+### Expense split equally across everyone
+POST {{host}}/api/groups/{{group}}/expenses
+Content-Type: application/json
+
+{ "description": "Airbnb, 3 nights", "amount": 540, "paidBy": "{{ana}}", "split": { "type": "equal" } }
+
+### Expense split 60/40
+POST {{host}}/api/groups/{{group}}/expenses
+Content-Type: application/json
+
+{
+  "description": "Rental car",
+  "amount": 210.50,
+  "paidBy": "{{ben}}",
+  "split": { "type": "percent", "shares": [
+    { "memberId": "{{ana}}", "percent": 60 },
+    { "memberId": "{{ben}}", "percent": 40 }
+  ] }
+}
+
+### List expenses
+GET {{host}}/api/groups/{{group}}/expenses?limit=20
+
+### Balances
+GET {{host}}/api/groups/{{group}}/balances
+
+### Settlement - who pays whom
+GET {{host}}/api/groups/{{group}}/settlement
