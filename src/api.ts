@@ -27,6 +27,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     res = await fetch(BASE + path, {
       ...init,
+      credentials: 'same-origin', // carry the session cookie
       headers: { 'content-type': 'application/json', ...init?.headers },
     });
   } catch {
@@ -59,6 +60,18 @@ export function filterParams(filters: Filters): URLSearchParams {
 const withParams = (path: string, params: URLSearchParams) => {
   const query = params.toString();
   return query ? `${path}?${query}` : path;
+};
+
+export const auth = {
+  me: () => unwrap<{ username: string }>('/auth/me'),
+
+  login: (username: string, password: string) =>
+    unwrap<{ username: string }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    }),
+
+  logout: () => request<void>('/auth/logout', { method: 'POST' }),
 };
 
 export const api = {

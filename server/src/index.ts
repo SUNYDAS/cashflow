@@ -15,6 +15,19 @@ if (!process.env.MONGODB_URI && process.env.NODE_ENV === 'production') {
   process.exit(1);
 }
 
+if (process.env.NODE_ENV === 'production') {
+  // Without these the app would deploy with no working login at all, which is
+  // worse than not starting.
+  const missing = (['AUTH_USERNAME', 'AUTH_PASSWORD', 'SESSION_SECRET'] as const).filter(
+    (key) => !process.env[key],
+  );
+  if (missing.length > 0) {
+    console.error(`[api] missing required environment variables: ${missing.join(', ')}`);
+    console.error('[api] set them on the host, then redeploy');
+    process.exit(1);
+  }
+}
+
 async function main() {
   await connectDb(MONGODB_URI);
   const server = createApp(CORS_ORIGIN).listen(PORT, HOST, () => {

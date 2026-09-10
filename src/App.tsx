@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { api } from './api';
+import { api, ApiError, auth } from './api';
 import { CategoryChart, DailyChart, MonthlyChart, SavingsChart } from './components/Charts';
 import { FilterBar } from './components/FilterBar';
 import { defaultFilters } from './filterPresets';
 import { StatTiles } from './components/StatTiles';
 import { TransactionForm, TransactionTable } from './components/TransactionPanel';
+import { LoginPage } from './components/LoginPage';
 import type {
   CategoryBreakdown,
   DayPoint,
@@ -21,6 +22,8 @@ const CURRENCY = 'INR';
 const PAGE = 25;
 
 export default function App() {
+  // undefined = still checking the session, null = signed out.
+  const [user, setUser] = useState<string | null | undefined>(undefined);
   const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [monthly, setMonthly] = useState<MonthPoint[]>([]);
@@ -34,8 +37,36 @@ export default function App() {
   const [limit, setLimit] = useState(PAGE);
   const [error, setError] = useState<string | null>(null);
 
-  const report = (err: unknown) =>
+  const report = (err: unknown) => {
+    // A session that expired mid-use should return to the login screen rather
+    // than show a wall of failed requests.
+    if (err instanceof ApiError && err.status === 401) {
+      setUser(null);
+      return;
+    }
     setError(err instanceof Error ? err.message : 'Something went wrong');
+  };
+
+  useEffect(() => {
+    auth
+      .me()
+      .then((me) => setUser(me.username))
+      .catch(() => setUser(null));
+  }, []);
+
+  async function signIn(username: string, password: string) {
+    const me = await auth.login(username, password);
+    setUser(me.username);
+  }
+
+  async function signOut() {
+    try {
+      await auth.logout();
+    } finally {
+      setUser(null);
+      setPage(null);
+    }
+  }
 
   /** Charts, tiles and table all read the same filters, so they refresh together. */
   const load = useCallback(async () => {
@@ -60,6 +91,7 @@ export default function App() {
   }, [filters, limit, sort, order]);
 
   useEffect(() => {
+    if (!user) return;
     let cancelled = false;
     load().catch((err) => {
       if (!cancelled) report(err);
@@ -67,7 +99,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [load]);
+  }, [load, user]);
 
   // Derived, not stored: nothing has loaded until the first page arrives. On a
   // later filter change the previous data stays on screen while the next loads.
@@ -96,12 +128,21 @@ export default function App() {
     }
   }
 
+  if (user === undefined) return <p className="boot">Loading…</p>;
+  if (user === null) return <LoginPage onSignIn={signIn} />;
+
   return (
     <div className="app">
       <header className="topbar">
         <div>
           <h1>Cost Analysis</h1>
           <p>Where your money goes, month by month.</p>
+        </div>
+        <div className="who">
+          <span>{user}</span>
+          <button type="button" className="ghost" onClick={signOut}>
+            Sign out
+          </button>
         </div>
       </header>
 
@@ -168,6 +209,8 @@ export default function App() {
           </div>
         </>
       )}
+
+      <footer className="site-footer">Developed by Suny Das</footer>
     </div>
   );
 }

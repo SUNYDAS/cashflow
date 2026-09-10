@@ -92,6 +92,20 @@ password never enters the repo.
    | `MONGODB_URI` | the string from step 1 |
    | `NODE_ENV` | `production` |
    | `MONGOMS_DISABLE_POSTINSTALL` | `1` |
+   | `AUTH_USERNAME` | the username you'll sign in with |
+   | `AUTH_PASSWORD` | the password you'll sign in with |
+   | `SESSION_SECRET` | a long random string (see below) |
+
+   **All three auth variables are required in production** — the server refuses
+   to boot without them rather than deploying with no lock on the door. Generate
+   the secret with:
+
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+
+   Changing `SESSION_SECRET` later signs everyone out, which is how you revoke
+   a session you think has been stolen.
 
    The third one matters: `mongodb-memory-server` is a dev dependency that
    downloads a ~100 MB MongoDB binary on install. Production never uses it, and
@@ -138,6 +152,9 @@ there.
 | `HOST` | `0.0.0.0` | Bind address. The default is what makes a container reachable. |
 | `NODE_ENV` | — | Set to `production` on the host. |
 | `CORS_ORIGIN` | `http://localhost:5173` | Only used if you split frontend and backend onto separate domains. Irrelevant in the single-service setup. |
+| `AUTH_USERNAME` | `admin` | Login username. **Required** in production. |
+| `AUTH_PASSWORD` | — | Login password. **Required** in production; login always fails if unset. |
+| `SESSION_SECRET` | random per process | Signs the session cookie. **Required** in production — without a stable value every restart signs you out. |
 
 ---
 
@@ -164,8 +181,9 @@ it, or a cron ping every 10 minutes keeps it warm.
 **Atlas free tier also sleeps** after long inactivity — the first query after can
 time out. Retrying works.
 
-**Anyone with the URL can use your app.** There is no login. Everyone shares one
-set of transactions. Keep the URL private, or add auth before sharing it.
+**One login, one set of data.** The app is single-user: `AUTH_USERNAME` and
+`AUTH_PASSWORD` are the only credentials, and everyone who signs in sees the same
+transactions. The session is an HMAC-signed httpOnly cookie valid for 7 days.
 
 **Editing the frontend needs a redeploy.** The React app is compiled into `dist/`
 at build time, not served from source.
