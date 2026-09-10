@@ -690,3 +690,36 @@ button.more {
   margin-top: 0;
   padding-top: 0;
 }
+
+/* password show/hide toggle */
+.password-field {
+  position: relative;
+  display: block;
+}
+.password-field input {
+  padding-right: 40px;
+}
+button.peek {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text);
+  opacity: 0.6;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  cursor: pointer;
+}
+button.peek:hover {
+  opacity: 1;
+  background: none;
+  filter: none;
+}
+button.peek:focus-visible {
+  outline: 2px solid var(--accent-border);
+  opacity: 1;
+}
